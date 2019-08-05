@@ -54,7 +54,7 @@ endif
 endif
 	cd kr; go build -ldflags="-s -w" $(GO_TAGS) -o ../bin/kr
 	cd krd/main; CGO_LDFLAGS="$(CGO_LDFLAGS)" go build -ldflags="-s -w" $(GO_TAGS) -o ../../bin/krd
-	cd pkcs11shim; make; cp target/release/kr-pkcs11.so ../lib/
+#	cd pkcs11shim; make; cp target/release/kr-pkcs11.so ../lib/
 	cd krssh; go build -ldflags="-s -w" $(GO_TAGS) -o ../bin/krssh
 	cd krgpg; go build $(GO_TAGS) -ldflags="-s -w" -o ../bin/krgpg
 
@@ -65,7 +65,7 @@ check:
 	go clean -cache || true
 	go test $(GO_TAGS) github.com/kryptco/kr
 	CGO_LDFLAGS="$(CGO_TEST_LDFLAGS)" go test $(GO_TAGS) github.com/kryptco/kr/krd github.com/kryptco/kr/krd/main github.com/kryptco/kr/krdclient github.com/kryptco/kr/kr github.com/kryptco/kr/krssh github.com/kryptco/kr/krgpg
-	cd pkcs11shim; cargo test
+#	cd pkcs11shim; cargo test
 
 install: all
 	mkdir -p $(DSTBIN)
@@ -81,7 +81,7 @@ endif
 	$(SUDO) install $(SRCBIN)/krd $(DSTBIN)
 	$(SUDO) install $(SRCBIN)/krssh $(DSTBIN)
 	$(SUDO) install $(SRCBIN)/krgpg $(DSTBIN)
-	$(SUDO) install $(SRCLIB)/kr-pkcs11.so $(DSTLIB)
+#	$(SUDO) install $(SRCLIB)/kr-pkcs11.so $(DSTLIB)
 
 start:
 ifeq ($(UNAME_S),Darwin)
@@ -97,4 +97,4 @@ uninstall:
 	$(SUDO) rm -f $(DSTBIN)/krd
 	$(SUDO) rm -f $(DSTBIN)/krssh
 	$(SUDO) rm -f $(DSTBIN)/krgpg
-	$(SUDO) rm -f $(DSTLIB)/kr-pkcs11.so
+#	$(SUDO) rm -f $(DSTLIB)/kr-pkcs11.so
