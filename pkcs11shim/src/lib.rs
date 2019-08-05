@@ -1,6 +1,7 @@
 #[warn(unused_extern_crates)]
 #[macro_use]
 extern crate lazy_static;
+#[cfg(not(windows))]
 extern crate syslog;
 
 mod pkcs11;

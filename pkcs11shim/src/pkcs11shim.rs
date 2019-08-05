@@ -2,25 +2,16 @@
 
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
-use std::sync::Mutex;
 use std::env;
 use std::fs::OpenOptions;
-use std::os::unix::io::AsRawFd;
+use std::os::windows::io::AsRawHandle;
 use std::path::Path;
 
 extern crate libc;
-extern crate users;
-
-use self::users::get_user_by_name;
-use self::users::os::unix::UserExt;
 
 use pkcs11_unused::*;
 use pkcs11::*;
 use utils::*;
-
-lazy_static! {
-    static ref OLD_STDERR_FD: Mutex<Option<libc::c_int>> = Mutex::new(None);
-}
 
 #[no_mangle]
 pub extern "C" fn C_GetFunctionList(function_list: *mut *mut _CK_FUNCTION_LIST) -> CK_RV {
@@ -44,23 +35,19 @@ pub extern "C" fn CK_C_GetFunctionList(function_list: *mut *mut _CK_FUNCTION_LIS
 extern "C" fn CK_C_Initialize(init_args: *mut ::std::os::raw::c_void) -> CK_RV {
     notice!("CK_C_Initialize");
 
-    let mut krd_auth_sock = if let Ok(sudo_user) = env::var("SUDO_USER") {
-        get_user_by_name(&sudo_user).map(|u| u.home_dir().to_path_buf())
-    } else {
-        env::home_dir()
-    };
+    let mut krd_auth_sock = env::home_dir();
     if let Some(mut krd_auth_sock) = krd_auth_sock {
         krd_auth_sock.push(".kr/krd-agent.sock");
         if let Ok(original_auth_sock) = env::var("SSH_AUTH_SOCK") {
             if let Some(mut backup_agent) = env::home_dir() {
-                use std::os::unix::fs::symlink;
+                use std::os::windows::fs::symlink_file;
                 use std::fs;
 
                 backup_agent.push(".kr/original-agent.sock");
                 fs::remove_file(backup_agent.clone());
                 if Path::new(&original_auth_sock) != krd_auth_sock {
                     notice!("found backup auth_sock {}", original_auth_sock);
-                    match symlink(original_auth_sock, backup_agent) {
+                    match symlink_file(original_auth_sock, backup_agent) {
                         Err(e) => {
                             error!("error linking backup agent: {:?}", e);
                         },
@@ -77,15 +64,6 @@ extern "C" fn CK_C_Initialize(init_args: *mut ::std::os::raw::c_void) -> CK_RV {
         .read(true)
         .write(true)
         .open("/dev/null") {
-            match OLD_STDERR_FD.lock() {
-                Ok(mut old_stderr_fd) => {
-                    unsafe {
-                        *old_stderr_fd = Some(libc::dup(libc::STDERR_FILENO));
-                        libc::dup2(dev_null.as_raw_fd(), libc::STDERR_FILENO);
-                    };
-                },
-                Err(_) => {},
-            };
         }
     CKR_OK
 }
@@ -197,7 +175,7 @@ pub extern "C" fn CK_C_GetMechanismList(slotID: CK_SLOT_ID,
     notice!("CK_C_GetMechanismList");
     if mechanism_list.is_null() {
         unsafe {
-            *count = MECHANISM_LIST.len() as u64;
+            *count = MECHANISM_LIST.len() as u32;
         }
         return CKR_OK;
     }
@@ -256,7 +234,7 @@ pub extern "C" fn CK_C_OpenSession(slotID: CK_SLOT_ID,
         return CKR_SESSION_PARALLEL_NOT_SUPPORTED;
     }
     unsafe {
-        *session = next_session_handle.fetch_add(1usize, SeqCst) as u64;
+        *session = next_session_handle.fetch_add(1usize, SeqCst) as u32;
     }
     CKR_OK
 }
@@ -312,17 +290,6 @@ pub extern "C" fn CK_C_GetAttributeValue(session: CK_SESSION_HANDLE,
 
 pub extern "C" fn CK_C_Finalize(pReserved: *mut ::std::os::raw::c_void) -> CK_RV {
     notice!("CK_C_Finalize");
-    match OLD_STDERR_FD.lock() {
-        Ok(old_stderr_fd) => {
-            match *old_stderr_fd {
-                Some(fd) => {
-                    unsafe { libc::dup2(fd, libc::STDERR_FILENO) };
-                },
-                _ => {},
-            };
-        },
-        Err(_) => { },
-    };
     CKR_OK
 }
 

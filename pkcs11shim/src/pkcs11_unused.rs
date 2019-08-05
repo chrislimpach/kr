@@ -1,49 +1,28 @@
 #![allow(dead_code, non_snake_case, unused_variables, non_upper_case_globals)]
 use pkcs11::*;
 
-use std::io::{stderr, Write, Error};
-
-use syslog;
-pub use syslog::{Facility, Severity};
-
-
-lazy_static! {
-    pub static ref logger : Option<Box<syslog::Logger>> = {
-        get_logger().or_else(|e| {
-            Err(e)
-        }).ok()
-    };
-}
-
-fn get_logger() -> Result<Box<syslog::Logger>, Error> {
-    let logger_result = syslog::unix(Facility::LOG_USER);
-    logger_result.map_err(|e| {
-        e
-    })
-}
-
 macro_rules! error {
     ( $ ( $ arg : expr ), * ) => { 
-        logger.as_ref().map(|l| l.err(&format!($($arg),*)).map_err(|e| {
+        writeln!(&mut stderr(), "{}", &format!($($arg),*)).map_err(|e| {
             writeln!(&mut stderr(), "error logging: {:?}", e);
-        }));
+        });
     };
 }
 
 macro_rules! warning {
     ( $ ( $ arg : expr ), * ) => { 
-        logger.as_ref().map(|l| l.warn(&format!($($arg),*)).map_err(|e| {
+        writeln!(&mut stderr(), "{}", &format!($($arg),*)).map_err(|e| {
             writeln!(&mut stderr(), "error logging: {:?}", e);
-        }));
+        });
     };
 }
 
 macro_rules! notice {
     ( $ ( $ arg : expr ), * ) => { 
         use std::io::{stderr, Write};
-        logger.as_ref().map(|l| l.notice(&format!($($arg),*)).map_err(|e| {
+        writeln!(&mut stderr(), "{}", &format!($($arg),*)).map_err(|e| {
             writeln!(&mut stderr(), "error logging: {:?}", e);
-        }));
+        });
     };
 }
 
