@@ -31,6 +31,9 @@ type hostAuthCallback chan *kr.HostAuth
 
 func (a *Agent) withOriginalAgent(do func(agent.Agent)) error {
 	originalAgentSock := os.Getenv("SSH_AUTH_SOCK")
+	if originalAgentSock == "" {
+		return nil
+	}
 	if strings.HasSuffix(originalAgentSock, "krd-agent.sock") {
 		return nil
 	}
