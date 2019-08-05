@@ -395,7 +395,7 @@ func (a *Agent) tryHostAuth(sig *sessionIDSig, session []byte) *kr.HostAuth {
 	return nil
 }
 
-func ServeKRAgent(enclaveClient EnclaveClientI, agentListener net.Listener, hostAuthListener net.Listener, log *logging.Logger) (err error) {
+func ServeKRAgent(enclaveClient EnclaveClientI, agentListener kr.AgentListener, hostAuthListener net.Listener, log *logging.Logger) (err error) {
 	hostAuthCallbacksBySessionID, err := lru.New(128)
 	if err != nil {
 		return
@@ -434,6 +434,11 @@ func ServeKRAgent(enclaveClient EnclaveClientI, agentListener net.Listener, host
 			continue
 		}
 		go func() {
+			err := conn.Handshake(agentListener)
+			if err != nil {
+				log.Error("handshake error: ", err.Error())
+				return
+			}
 			kr.RecoverToLog(func() {
 				defer conn.Close()
 				agent.ServeAgent(krAgent, conn)
