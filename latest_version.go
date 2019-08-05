@@ -8,7 +8,6 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/op/go-logging"
-	"github.com/youtube/vitess/go/ioutil2"
 )
 
 var VERSIONS_S3_BUCKET = "https://s3.amazonaws.com/kr-versions/versions"
@@ -46,7 +45,7 @@ func cacheLatestVersions(versionsJson []byte) {
 		log.Error("Error finding home directory:", fileErr.Error())
 		return
 	}
-	if writeErr := ioutil2.WriteFileAtomic(file, versionsJson, 0700); writeErr != nil {
+	if writeErr := ioutil.WriteFile(file, versionsJson, 0700); writeErr != nil {
 		log.Error("Error writing update log file:", writeErr.Error())
 	}
 }
@@ -81,7 +80,7 @@ func CheckedForUpdateRecently(log *logging.Logger) bool {
 		if marshalErr != nil {
 			log.Error("Error serializing current time:", marshalErr.Error())
 		} else {
-			if writeErr := ioutil2.WriteFileAtomic(file, nowUnixSecondsBytes, 0700); writeErr != nil {
+			if writeErr := ioutil.WriteFile(file, nowUnixSecondsBytes, 0700); writeErr != nil {
 				log.Error("Error writing update log file:", writeErr.Error())
 			}
 		}
