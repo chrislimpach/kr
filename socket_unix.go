@@ -11,11 +11,11 @@ import (
 )
 
 func DaemonDial(unixFile string) (conn net.Conn, err error) {
-	if !IsKrdRunning() {
-		os.Stderr.WriteString(Yellow("Krypton ▶ Restarting krd...\r\n"))
-		exec.Command("nohup", "krd").Start()
-		<-time.After(1 * time.Second)
-	}
+//	if !IsKrdRunning() {
+//		os.Stderr.WriteString(Yellow("Krypton ▶ Restarting krd...\r\n"))
+//		exec.Command("nohup", "krd").Start()
+//		<-time.After(1 * time.Second)
+//	}
 	conn, err = net.Dial("unix", unixFile)
 	if err != nil {
 		//	restart then try again
