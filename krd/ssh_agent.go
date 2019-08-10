@@ -366,7 +366,7 @@ func (a *Agent) onHostAuth(hostAuth kr.HostAuth) {
 	if len(a.recentSessionIDSignatures) > 50 {
 		a.recentSessionIDSignatures = a.recentSessionIDSignatures[:50]
 	}
-	a.log.Debug("received hostAuth " + fmt.Sprintf("%+v", hostAuth))
+	// a.log.Debug("received hostAuth " + fmt.Sprintf("%+v", hostAuth))
 
 	for _, session := range a.hostAuthCallbacksBySessionID.Keys() {
 		sessionBytes, err := base64.StdEncoding.DecodeString(session.(string))
