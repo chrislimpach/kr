@@ -93,7 +93,7 @@ func CheckIfUpdateAvailable(log *logging.Logger) bool {
 	var latest semver.Version
 	var verErr error
 	if CheckedForUpdateRecently(log) {
-		log.Notice("Checked for update recently, falling back to latest version cache.")
+		// log.Notice("Checked for update recently, falling back to latest version cache.")
 		var cacheErr error
 		latest, cacheErr = GetCachedLatestVersion()
 		if cacheErr != nil {
